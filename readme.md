@@ -41,6 +41,12 @@ To generate a version of the documentation to make note sorting easier:
 python footnotes.py my_notes.md annotate
 ```
 
+Again, you probably want to redirect to a file:
+
+```
+python footnotes.py my_notes.md annotate > my_notes.fnids.md
+```
+
 This basically copies the original notes, merges them into a single file, and adds footnote ids to each section.
 
 For example:
