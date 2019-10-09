@@ -65,6 +65,6 @@ Some more notes
 > Another quotation
 ```
 
-This also includes a script to make citing these notes easier. When you copy a note, a markdown footnote reference will be added to the clipboard data.
+This also includes a script to make citing these notes easier, available after compiling the note to HTML and viewing in a browser (e.g. with [`nom`](https://github.com/frnsys/nom)). When you copy a note, a markdown footnote reference will be added to the clipboard data.
 
 For example, say you copy `Some more notes`. The clipboard data will be `Some more notes [^03cf0]`.
