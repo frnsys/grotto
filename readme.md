@@ -56,7 +56,6 @@ For example:
 # Rosset, P. M., & Altieri, M. A. (1997). Agroecology versus input substitution: a fundamental contradiction of sustainable agriculture. Society & Natural Resources, 10(3), 283-295.
 <a class="fn-ref" id="3795f">3795f</a>
 
-
 Some notes
 
 > A quotation
