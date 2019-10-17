@@ -4,6 +4,40 @@ let undoHistory = [];
 let fns = [...document.querySelectorAll('.fn-ref')].map((fn) => [fn.offsetTop, fn.id]);
 fns.reverse();
 
+function getBetweenNodes(startNode, endNode, commonAncestor) {
+  // Find all of endContainer's ancestors up to
+  // the common ancestor
+  let ancestors = [];
+  // TODO what if endContainer IS commonancestor
+  let currNode = endNode;
+  while (currNode.parentNode !== commonAncestor) {
+    ancestors.push(currNode.parentNode);
+    currNode = currNode.parentNode;
+  }
+  ancestors.push(commonAncestor);
+
+  let between = [];
+  let node = startNode;
+  while (node !== endNode) {
+    if (ancestors.includes(node)) {
+      node = node.firstChild;
+      if (!ancestors.includes(node)) {
+        between.push(node);
+      }
+    } else if (node.nextSibling) {
+      node = node.nextSibling;
+      if (!ancestors.includes(node)) {
+        between.push(node);
+      }
+    } else {
+      while (!node.nextSibling) {
+        node = node.parentNode;
+      }
+    }
+  }
+  return between;
+}
+
 function closestFootnoteId(node) {
   let top = node.parentElement.offsetTop;
   let fn = fns.find((fn) => {
@@ -34,15 +68,20 @@ input.style.fontSize = '1em';
 input.addEventListener('keydown', (ev) => {
   if (ev.key == 'Enter') {
     input.style.display = 'none';
-    let tags = input.value.split(',').map((t) => t.trim());
-    let data = {
-      data: selected.data,
-      fnid: selected.fnid,
-      type: selected.type,
-      tags: tags
-    };
-    if (selected.reset) selected.reset();
-    console.log(data);
+    let tags = input.value.split(',').map((t) => t.trim()).filter(Boolean);
+    if (tags.length > 0) {
+      let data = {
+        data: selected.data,
+        fnid: selected.fnid,
+        type: selected.type,
+        tags: tags
+      };
+      // if (selected.reset) selected.reset();
+      if (selected.mute) selected.mute();
+      console.log(data);
+    } else {
+      if (selected.reset) selected.reset();
+    }
   }
 });
 
@@ -80,12 +119,75 @@ document.addEventListener('keydown', (ev) => {
           if (selected.reset) selected.reset();
 
           // Highlight selection
-          let range = selection.getRangeAt(0);
+          let range = selection.getRangeAt(0).cloneRange();
           let span = document.createElement('span');
-          span.style.background = '#F0DC4E';
-          range.surroundContents(span);
+          span.classList.add('selected');
+          let spans = [span];
+          if (range.startContainer !== range.endContainer) {
+            let startRange = new Range();
+            let startSpan = span.cloneNode();
+            startRange.setStart(range.startContainer, range.startOffset);
+            startRange.setEnd(range.startContainer, range.startContainer.length);
+            startRange.surroundContents(startSpan);
+            spans.push(startSpan);
+
+            // Find all of endContainer's ancestors up to
+            // the common ancestor
+            let ancestors = [];
+            // TODO what if endContainer IS commonancestor
+            let currNode = range.endContainer;
+            while (currNode.parentNode !== range.commonAncestorContainer) {
+              ancestors.push(currNode.parentNode);
+              currNode = currNode.parentNode;
+            }
+            let tbetweenNodes = [];
+            let nextNode = range.startContainer.nextSibling || range.startContainer.parentNode;
+            let up = true;
+            while (nextNode) {
+              tbetweenNodes.push(nextNode);
+              if (ancestors.includes(nextNode)) {
+                up = false;
+                nextNode = nextNode.firstChild;
+              } else if (up) {
+                nextNode = nextNode.nextSibling || nextNode.parentNode;
+              } else {
+                nextNode = nextNode.nextSibling;
+              }
+            }
+
+            let endRange = new Range();
+            let endSpan = span.cloneNode();
+            endRange.setStart(range.endContainer, 0);
+            endRange.setEnd(range.endContainer, range.endOffset);
+            endRange.surroundContents(endSpan);
+            spans.push(endSpan);
+
+            let betweenNodes = getBetweenNodes(startSpan, endSpan, range.commonAncestorContainer);
+            betweenNodes.forEach((n) => {
+              let range = new Range();
+              if (n instanceof Text) {
+                let s = span.cloneNode();
+                range.setStart(n, 0);
+                range.setEnd(n, n.length);
+                range.surroundContents(s);
+                spans.push(s);
+              } else {
+                // Just re-use existing span
+                n.classList.add('selected');
+                [...n.querySelectorAll('span')].forEach((s) => {
+                  s.classList.add('selected');
+                  spans.push(s);
+                });
+                spans.push(n);
+              }
+            });
+          } else {
+            range.surroundContents(span);
+          }
           let reset = () => {
-            span.replaceWith(span.innerText);
+            spans.forEach((s) => {
+              s.classList.remove('selected');
+            });
           };
 
           selected = {
@@ -93,7 +195,13 @@ document.addEventListener('keydown', (ev) => {
             fnid: fnId,
             type: 'text',
             node: selection.anchorNode,
-            reset: reset
+            reset: reset,
+            mute: () => {
+              spans.forEach((s) => {
+                s.classList.remove('selected');
+                s.classList.add('tagged');
+              });
+            }
           };
 
           // Show tag input and focus
@@ -108,6 +216,7 @@ document.addEventListener('keydown', (ev) => {
 
     case 'Escape':
       input.style.display = 'none';
+      if (selected.reset) selected.reset();
       break;
   }
 });
