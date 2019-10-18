@@ -4,6 +4,15 @@ let undoHistory = [];
 let fns = [...document.querySelectorAll('.fn-ref')].map((fn) => [fn.offsetTop, fn.id]);
 fns.reverse();
 
+const tooltip = document.createElement('div');
+document.body.appendChild(tooltip);
+tooltip.style.display = 'none';
+tooltip.style.position = 'absolute';
+tooltip.style.background = '#222';
+tooltip.style.color = '#fff';
+tooltip.style.padding = '0.25em 0.5em';
+tooltip.style.fontSize = '0.8em';
+
 function getBetweenNodes(startNode, endNode, commonAncestor) {
   // Find all of endContainer's ancestors up to
   // the common ancestor
@@ -77,7 +86,7 @@ input.addEventListener('keydown', (ev) => {
         tags: tags
       };
       // if (selected.reset) selected.reset();
-      if (selected.mute) selected.mute();
+      if (selected.mute) selected.mute(tags);
       console.log(data);
     } else {
       if (selected.reset) selected.reset();
@@ -196,10 +205,13 @@ document.addEventListener('keydown', (ev) => {
             type: 'text',
             node: selection.anchorNode,
             reset: reset,
-            mute: () => {
+            mute: (tags) => {
               spans.forEach((s) => {
                 s.classList.remove('selected');
                 s.classList.add('tagged');
+                let existing = (s.dataset.tags || '').split(',').filter(Boolean);
+                let ts = [...new Set(existing.concat(tags))];
+                s.dataset.tags = ts.join(',');
               });
             }
           };
@@ -244,4 +256,23 @@ document.addEventListener('keydown', (ev) => {
       input.focus();
     }
   });
+});
+
+document.addEventListener('mousemove', (ev) => {
+  if (ev.target.tagName == 'SPAN') {
+    let tags = [];
+    let node = ev.target;
+    while (node.parentNode) {
+      let ts = (node.dataset.tags || '').split(',').filter(Boolean);
+      node = node.parentNode;
+      tags = tags.concat(ts);
+    }
+    tags = [...new Set(tags)];
+    tooltip.innerText = tags.join(', ');
+    tooltip.style.display = 'block';
+    tooltip.style.top = `${ev.target.offsetTop-20}px`;
+    tooltip.style.left = `${ev.target.offsetLeft}px`;
+  } else {
+    tooltip.style.display = 'none';
+  }
 });
