@@ -74,7 +74,10 @@ def footnotes(path):
         files = [path]
     else:
         files = glob(os.path.join(notes_dir, path, '*.md'))
-        fns, idx = make_footnotes(files, id_len=fnid_len)
+
+    # Only show footnotes in db
+    only = db.keys()
+    fns, idx = make_footnotes(files, id_len=fnid_len, only=only)
     return Response('\n'.join(fns), mimetype='text/plain')
 
 

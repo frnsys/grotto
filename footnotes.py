@@ -20,7 +20,7 @@ def make_id(citation):
     return urlsafe_b64encode(digest).rstrip(b'=').decode('utf8')
 
 
-def make_footnotes(files, id_len=None):
+def make_footnotes(files, id_len=None, only=None):
     citations = []
     for f in files:
         docs = open(f, 'r').read().split('---\n')
@@ -30,7 +30,9 @@ def make_footnotes(files, id_len=None):
     seen = {}
     footnotes = []
     for c in sorted(citations, key=lambda s: s.lower()):
-        id = make_id(c)[:id_len]
+        id = make_id(c)
+        if only and id not in only: continue
+        id = id[:id_len]
         if id in seen:
             raise Exception('Collision: {} & {}'.format(c, seen[id]))
         seen[id] = c
