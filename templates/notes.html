@@ -1,0 +1,14 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<a href="{{request.path}}/fns" class="fn-link">Footnotes</a>
+
+{{html|safe}}
+
+<script>
+const init = {{tags|safe}};
+</script>
+<script src="{{ url_for('static', filename='md5.js') }}"></script>
+<script src="{{ url_for('static', filename='main.js') }}"></script>
+{% endblock %}
+

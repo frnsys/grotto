@@ -4,6 +4,78 @@ let undoHistory = [];
 let fns = [...document.querySelectorAll('.fn-ref')].map((fn) => [fn.offsetTop, fn.id]);
 fns.reverse();
 
+console.log(init);
+
+function textNodesUnder(el){
+  var n, a=[], walk=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,null,false);
+  while(n=walk.nextNode()) a.push(n);
+  return a;
+}
+
+let ranges = [];
+Object.keys(init).forEach((fnid) => {
+  let article = document.getElementById(fnid);
+  [...article.querySelectorAll('img')].forEach((img) => {
+    Object.keys(init[fnid]).forEach((data) => {
+      let m = init[fnid][data];
+      if (m.type != 'image') return;
+      if (data == img.src) {
+          img.dataset.tags = m.tags.join(',');
+          img.style.boxShadow = 'rgb(195, 75, 39) 0px 0px 25px';
+      }
+    });
+  });
+  textNodesUnder(article).forEach((node) => {
+    if (node.isElementContentWhitespace) {
+      return;
+    }
+    Object.keys(init[fnid]).forEach((data) => {
+      let m = init[fnid][data];
+      if (m.type != 'text') return;
+      let hash = md5(`${data}--${m.tags.join(',')}--${fnid}`);
+      data.split('\n').map((t) => t.trim()).filter(Boolean).forEach((t) => {
+        let idx = node.textContent.indexOf(t);
+        if (idx < 0) return;
+        let range = document.createRange();
+        range.setStart(node, idx);
+        range.setEnd(node, idx+t.length);
+        ranges.push([range, m.tags, hash]);
+      });
+    });
+  });
+});
+ranges.forEach((d) => {
+  let [r, tags, hash] = d;
+  let span = document.createElement('span');
+  span.classList.add('tagged');
+  span.dataset.tags = tags.join(', ');
+  span.dataset.hashes = hash;
+  r.surroundContents(span);
+});
+
+function sendTags(data) {
+  fetch('/tag', {
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    method: 'POST',
+    body: JSON.stringify(data)
+  }).then((res) => {
+    if (!res.ok) {
+      alert(`Bad response from server: ${res.status}`);
+    } else {
+      // Send a confirmation notification
+      // successEl.style.display = 'block';
+      // setTimeout(() => {
+      //   successEl.style.display = 'none';
+      // }, 200);
+    }
+  }, (err) => {
+    alert(err.message);
+  });
+}
+
 const tooltip = document.createElement('div');
 document.body.appendChild(tooltip);
 tooltip.style.display = 'none';
@@ -80,13 +152,14 @@ input.addEventListener('keydown', (ev) => {
     let tags = input.value.split(',').map((t) => t.trim()).filter(Boolean);
     if (tags.length > 0) {
       let data = {
-        data: selected.data,
+        data: selected.data.trim(),
         fnid: selected.fnid,
         type: selected.type,
         tags: tags
       };
-      // if (selected.reset) selected.reset();
-      if (selected.mute) selected.mute(tags);
+      let hash = md5(`${selected.data.trim()}--${tags.join(',')}--${selected.fnid}`);
+      if (selected.mute) selected.mute(tags, hash);
+      sendTags(data);
       console.log(data);
     } else {
       if (selected.reset) selected.reset();
@@ -126,6 +199,8 @@ document.addEventListener('keydown', (ev) => {
         let fnId = closestFootnoteId(selection.anchorNode);
         if (fnId) {
           if (selected.reset) selected.reset();
+          let data = selection.toString();
+          console.log(data);
 
           // Highlight selection
           let range = selection.getRangeAt(0).cloneRange();
@@ -139,30 +214,6 @@ document.addEventListener('keydown', (ev) => {
             startRange.setEnd(range.startContainer, range.startContainer.length);
             startRange.surroundContents(startSpan);
             spans.push(startSpan);
-
-            // Find all of endContainer's ancestors up to
-            // the common ancestor
-            let ancestors = [];
-            // TODO what if endContainer IS commonancestor
-            let currNode = range.endContainer;
-            while (currNode.parentNode !== range.commonAncestorContainer) {
-              ancestors.push(currNode.parentNode);
-              currNode = currNode.parentNode;
-            }
-            let tbetweenNodes = [];
-            let nextNode = range.startContainer.nextSibling || range.startContainer.parentNode;
-            let up = true;
-            while (nextNode) {
-              tbetweenNodes.push(nextNode);
-              if (ancestors.includes(nextNode)) {
-                up = false;
-                nextNode = nextNode.firstChild;
-              } else if (up) {
-                nextNode = nextNode.nextSibling || nextNode.parentNode;
-              } else {
-                nextNode = nextNode.nextSibling;
-              }
-            }
 
             let endRange = new Range();
             let endSpan = span.cloneNode();
@@ -200,18 +251,21 @@ document.addEventListener('keydown', (ev) => {
           };
 
           selected = {
-            data: selection.toString(),
+            data: data,
             fnid: fnId,
             type: 'text',
             node: selection.anchorNode,
             reset: reset,
-            mute: (tags) => {
+            mute: (tags, hash) => {
               spans.forEach((s) => {
                 s.classList.remove('selected');
                 s.classList.add('tagged');
                 let existing = (s.dataset.tags || '').split(',').filter(Boolean);
                 let ts = [...new Set(existing.concat(tags))];
                 s.dataset.tags = ts.join(',');
+                let hashes = (s.dataset.hashes || '').split(' ').filter(Boolean);
+                hashes.push(hash);
+                s.dataset.hashes = hashes.join(' ');
               });
             }
           };
@@ -249,6 +303,12 @@ document.addEventListener('keydown', (ev) => {
         node: ev.target,
         reset: () => {
           ev.target.style.boxShadow = 'none';
+        },
+        mute: (tags) => {
+          let existing = (ev.target.dataset.tags || '').split(',').filter(Boolean);
+          let ts = [...new Set(existing.concat(tags))];
+          ev.target.dataset.tags = ts.join(',');
+          ev.target.style.boxShadow = 'rgb(195, 75, 39) 0px 0px 25px';
         }
       };
       ev.target.style.boxShadow = '0px 0px 25px rgb(65, 1, 242)';
@@ -258,21 +318,38 @@ document.addEventListener('keydown', (ev) => {
   });
 });
 
+let toHighlight = [];
 document.addEventListener('mousemove', (ev) => {
-  if (ev.target.tagName == 'SPAN') {
+  // TODO
+  toHighlight.forEach((n) => {
+    n.classList.remove('focused');
+  });
+  toHighlight = [];
+  if (ev.target.tagName == 'SPAN' || ev.target.tagName == 'IMG') {
     let tags = [];
     let node = ev.target;
     while (node.parentNode) {
       let ts = (node.dataset.tags || '').split(',').filter(Boolean);
+      if (ts.length > 0) {
+        toHighlight.push(node);
+        tags = tags.concat(ts);
+      }
       node = node.parentNode;
-      tags = tags.concat(ts);
     }
     tags = [...new Set(tags)];
-    tooltip.innerText = tags.join(', ');
-    tooltip.style.display = 'block';
-    tooltip.style.top = `${ev.target.offsetTop-20}px`;
-    tooltip.style.left = `${ev.target.offsetLeft}px`;
+    if (tags.length > 0) {
+      tooltip.innerText = tags.join(', ');
+      tooltip.style.display = 'block';
+      tooltip.style.top = `${ev.target.offsetTop-20}px`;
+      tooltip.style.left = `${ev.target.offsetLeft}px`;
+      toHighlight.forEach((n) => {
+        n.classList.add('focused');
+      });
+    } else {
+      tooltip.style.display = 'none';
+    }
   } else {
     tooltip.style.display = 'none';
   }
 });
+
