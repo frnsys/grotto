@@ -1,34 +1,28 @@
 import os
-import csv
 import json
+import config
 from glob import glob
+from lib import db, fn
 from nom import md2html
 from collections import defaultdict
-from footnotes import make_footnotes
 from flask import Flask, Response, render_template, request, jsonify, send_from_directory
 
 app = Flask(__name__)
-db = defaultdict(dict)
-db_path = 'test.csv'
-notes_dir = '/home/ftseng/notes/research'
-fnid_len = 6
+db = db.CSVDB(config.DB_PATH)
 
-
-@app.route('/')
-def index():
-    return 'index'
+def get_files(path):
+    path = os.path.join(config.NOTES_DIR, path)
+    if path.endswith('.md'):
+        return [path]
+    else:
+        return glob(os.path.join(config.NOTES_DIR, path, '*.md'))
 
 
 @app.route('/<path:path>')
 def notes(path):
     """Render single or directory of notes for tagging"""
-    path = os.path.join(notes_dir, path)
-    if path.endswith('.md'):
-        files = [path]
-    else:
-        files = glob(os.path.join(notes_dir, path, '*.md'))
-
-    fns, idx = make_footnotes(files)
+    files = get_files(path)
+    fns, idx = fn.make_footnotes(files)
     ids = {c: id for id, c in idx.items()}
 
     docs = []
@@ -62,41 +56,33 @@ def notes(path):
 def asset(path, asset_path):
     """Serve assets (images)"""
     *p, file = asset_path.split('/')
-    path = os.path.join(notes_dir, path, 'assets', '/'.join(p))
+    path = os.path.join(config.NOTES_DIR, path, 'assets', '/'.join(p))
     return send_from_directory(path, file)
 
 
 @app.route('/<path:path>/fns')
 def footnotes(path):
     """Render markdown for footnotes"""
-    path = os.path.join(notes_dir, path)
-    if path.endswith('.md'):
-        files = [path]
-    else:
-        files = glob(os.path.join(notes_dir, path, '*.md'))
+    files = get_files(path)
 
     # Only show footnotes in db
     only = db.keys()
-    fns, idx = make_footnotes(files, id_len=fnid_len, only=only)
+    fns, idx = fn.make_footnotes(files, id_len=config.FNID_LEN, only=only)
     return Response('\n'.join(fns), mimetype='text/plain')
 
 
 @app.route('/<path:path>/tags')
 def outline(path):
     """Render outline (organized tags)"""
-    path = os.path.join(notes_dir, path)
-    if path.endswith('.md'):
-        files = [path]
-    else:
-        files = glob(os.path.join(notes_dir, path, '*.md'))
-    fns, idx = make_footnotes(files)
+    files = get_files(path)
+    fns, idx = fn.make_footnotes(files)
 
     tags = defaultdict(list)
     for fnid in idx.keys():
         if fnid in db:
             for data, m in db[fnid].items():
                 for tag in m['tags']:
-                    tags[tag].append((data, m['type'], fnid[:fnid_len]))
+                    tags[tag].append((data, m['type'], fnid[:config.FNID_LEN]))
 
     outline = []
     for tag, ds in tags.items():
@@ -132,41 +118,9 @@ def tag():
             'tags': tags
         }
 
-    save_db(db, db_path)
+    db.save()
     return jsonify(ok=True)
 
 
-def load_db(path):
-    """Load a CSV 'database'"""
-    db = defaultdict(dict)
-    with open(path, newline='') as f:
-        reader = csv.reader(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        for row in reader:
-            fnid, data, tags, type = row
-            tags = tags.split(',')
-            db[fnid][data] = {
-                'type': type,
-                'tags': tags
-            }
-    return db
-
-
-def save_db(db, path):
-    """Save a CSV 'database'"""
-    # Write to tmp file first
-    tmpfile = '/tmp/.scanner.csv'
-    with open(tmpfile, 'w', newline='') as f:
-        writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        for fnid, annos in db.items():
-            for data, m in annos.items():
-                writer.writerow([fnid, data, ','.join(m['tags']), m['type']])
-        f.flush()
-        os.fsync(f.fileno())
-
-    # Safe to overwrite existing file
-    os.rename(tmpfile, path)
-
-
 if __name__ == '__main__':
-    db = load_db(db_path)
     app.run(debug=True)

@@ -1,7 +1,10 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<a href="{{request.path}}/fns" class="fn-link">Footnotes</a>
+<div class="links">
+    <a href="{{request.path}}/fns">Footnotes</a>
+    <a href="{{request.path}}/tags">Outline</a>
+</div>
 
 {{html|safe}}
 
