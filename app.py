@@ -17,6 +17,9 @@ def get_files(path):
     else:
         return glob(os.path.join(config.NOTES_DIR, path, '*.md'))
 
+@app.route('/')
+def index():
+    return render_template('test.html')
 
 @app.route('/<path:path>')
 def notes(path):
