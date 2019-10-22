@@ -1,6 +1,26 @@
 let selected = {};
 let undoHistory = [];
 
+function calculateLineHeight (element) {
+  let style = window.getComputedStyle(element);
+  let lineHeight = parseInt(style.getPropertyValue('line-height'));
+  var clone;
+  var singleLineHeight;
+  var doubleLineHeight;
+
+  if (isNaN(lineHeight)) {
+    clone = element.cloneNode();
+    clone.innerHTML = '<br>';
+    element.appendChild(clone);
+    singleLineHeight = clone.offsetHeight;
+    clone.innerHTML = '<br><br>';
+    doubleLineHeight = clone.offsetHeight;
+    element.removeChild(clone);
+    lineHeight = doubleLineHeight - singleLineHeight;
+  }
+  return lineHeight;
+}
+
 let fns = [...document.querySelectorAll('.fn-ref')].map((fn) => [fn.offsetTop, fn.id]);
 fns.reverse();
 
@@ -12,6 +32,7 @@ function textNodesUnder(el){
   return a;
 }
 
+let TAGS = {};
 let ranges = [];
 Object.keys(init).forEach((fnid) => {
   let article = document.getElementById(fnid);
@@ -33,6 +54,7 @@ Object.keys(init).forEach((fnid) => {
       let m = init[fnid][data];
       if (m.type != 'text') return;
       let hash = md5(`${data}--${m.tags.join(',')}--${fnid}`);
+      TAGS[hash] = m.tags;
       data.split('\n').map((t) => t.trim()).filter(Boolean).forEach((t) => {
         let idx = node.textContent.indexOf(t);
         if (idx < 0) return;
@@ -158,6 +180,7 @@ input.addEventListener('keydown', (ev) => {
         tags: tags
       };
       let hash = md5(`${selected.data.trim()}--${tags.join(',')}--${selected.fnid}`);
+      TAGS[hash] = tags;
       if (selected.mute) selected.mute(tags, hash);
       sendTags(data);
       console.log(data);
@@ -318,38 +341,101 @@ document.addEventListener('keydown', (ev) => {
   });
 });
 
-let toHighlight = [];
+
+const colors = [
+  '#ff0000',
+  '#0000ff',
+  '#00ff00',
+  '#000000'
+];
+
+let highlights = [];
 document.addEventListener('mousemove', (ev) => {
-  // TODO
-  toHighlight.forEach((n) => {
-    n.classList.remove('focused');
+  highlights.forEach((h) => {
+    h.remove();
   });
-  toHighlight = [];
-  if (ev.target.tagName == 'SPAN' || ev.target.tagName == 'IMG') {
+  if (ev.target.tagName == 'SPAN') {
     let tags = [];
+    let hashes = [];
     let node = ev.target;
     while (node.parentNode) {
       let ts = (node.dataset.tags || '').split(',').filter(Boolean);
+      let hs = (node.dataset.hashes || '').split(' ').filter(Boolean);
       if (ts.length > 0) {
-        toHighlight.push(node);
         tags = tags.concat(ts);
+        hashes = hashes.concat(hs);
       }
       node = node.parentNode;
     }
     tags = [...new Set(tags)];
-    if (tags.length > 0) {
-      tooltip.innerText = tags.join(', ');
-      tooltip.style.display = 'block';
-      tooltip.style.top = `${ev.target.offsetTop-20}px`;
-      tooltip.style.left = `${ev.target.offsetLeft}px`;
-      toHighlight.forEach((n) => {
-        n.classList.add('focused');
+    hashes = [...new Set(hashes)];
+    let labels = document.createElement('div');
+    labels.style.position = 'absolute';
+    labels.style.left = '100%';
+    labels.style.top = 0;
+    labels.style.padding = '0 1em';
+    let labelParentCandidates = [];
+    hashes.forEach((h, i) => {
+      let nodes = [...document.querySelectorAll(`[data-hashes*="${h}"]`)];
+      let color = colors[i % colors.length];
+      let localhighlights = [];
+
+      // Get top-most node
+      nodes.sort((a, b) => b.offsetTop - a.offsetTop);
+      labelParentCandidates.push(nodes[0]);
+
+      nodes.forEach((n) => {
+        n.style.position = 'relative';
+        let lineHeight = calculateLineHeight(n);
+        let elHeight = n.offsetHeight;
+        let lines = Math.ceil(elHeight/lineHeight);
+        let h = lineHeight;
+        let underline = document.createElement('div');
+        underline.style.borderTop = `2px solid ${color}`;
+        underline.style.height = `${h}px`;
+        underline.style.position = 'absolute';
+        underline.style.left = '0';
+        underline.style.right = '0';
+        underline.style.fontSize = `${h-6}px`;
+        underline.style.bottom = `-${h+i}px`;
+        underline.style.pointerEvents = 'none';
+        n.appendChild(underline);
+        highlights.push(underline);
+        localhighlights.push(underline);
+        [...Array(lines-1).keys()].forEach((l) => {
+          let underline = document.createElement('div');
+          underline.style.borderTop = `2px solid ${color}`;
+          underline.style.height = `${h}px`;
+          underline.style.position = 'absolute';
+          underline.style.left = `-${n.offsetWidth-n.offsetLeft}px`; // TODO
+          if (l == lines-2) {
+            let marker = document.createElement('span');
+            n.appendChild(marker);
+            underline.style.right = `${n.offsetWidth-marker.offsetLeft}px`;
+          } else {
+            underline.style.right = '0';
+          }
+          underline.style.fontSize = `${h-6}px`;
+          underline.style.bottom = `-${h+i+((l+1)*lineHeight)}px`;
+          underline.style.pointerEvents = 'none';
+          n.appendChild(underline);
+          highlights.push(underline);
+        });
       });
-    } else {
-      tooltip.style.display = 'none';
-    }
-  } else {
-    tooltip.style.display = 'none';
+
+      // This should be leftmost and topmost first (min n.offsetLeft, min n.offsetTop)
+      let label = document.createElement('span');
+      // label.style.background = color;
+      label.style.color = color;
+      // label.style.color = '#fff';
+      label.style.padding = '2px';
+      label.style.display = 'inline-block';
+      label.innerText = TAGS[h].join(', '); // TODO
+      labels.appendChild(label);
+    });
+
+    labelParentCandidates.sort((a, b) => b.offsetTop - a.offsetTop);
+    labelParentCandidates[0].appendChild(labels);
+    highlights.push(labels);
   }
 });
-

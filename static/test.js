@@ -34,13 +34,13 @@ document.addEventListener('mousemove', (ev) => {
         n.style.position = 'relative';
 
         let underline = document.createElement('div');
-        let h = 12;
-        underline.style.background = color;
+        let h = 16;
+        underline.style.borderTop = `1px solid ${color}`;
         underline.style.height = `${h}px`;
         underline.style.position = 'absolute';
         underline.style.left = '0';
         underline.style.right = '0';
-        underline.style.fontSize = `${h-2}px`;
+        underline.style.fontSize = `${h-6}px`;
         underline.style.bottom = `-${(i+1)*h}px`;
         n.appendChild(underline);
         highlights.push(underline);
@@ -48,7 +48,12 @@ document.addEventListener('mousemove', (ev) => {
       });
 
       // This should be leftmost and topmost first (min n.offsetLeft, min n.offsetTop)
-      localhighlights[0].innerText = 'tag';
+      let label = document.createElement('span');
+      label.style.background = color;
+      label.style.padding = '2px';
+      label.style.display = 'inline-block';
+      label.innerText = 'tag'; // TODO
+      localhighlights[0].appendChild(label);
     });
   }
 });
