@@ -32,8 +32,50 @@ function textNodesUnder(el){
   return a;
 }
 
+function rangeOverlap(a, b) {
+  return a[0] < b[1] && b[0] < a[1];
+}
+function pairwise(arr, func){
+  for(var i=0; i < arr.length - 1; i++){
+    func(arr[i], arr[i + 1])
+  }
+}
+
+function decomposeRanges(ranges) {
+  let results = [];
+  let endpoints = [];
+  ranges.forEach((r) => {
+    endpoints.push(r[0]);
+    endpoints.push(r[1]);
+  });
+  endpoints = [...new Set(endpoints)];
+  endpoints.sort((a, b) => a - b);
+  let start = {};
+  let end = {};
+  endpoints.forEach((e) => {
+    start[e] = new Set();
+    end[e] = new Set();
+  });
+  ranges.forEach((r) => {
+    start[r[0]].add(r[2]);
+    end[r[1]].add(r[2]);
+  });
+  let currentRanges = new Set();
+  pairwise(endpoints, (e1, e2) => {
+    end[e1].forEach((t) => {
+      currentRanges.delete(t);
+    });
+    start[e1].forEach((t) => {
+      currentRanges.add(t);
+    });
+    if (currentRanges.size > 0) {
+      results.push([e1, e2, [...currentRanges]]);
+    }
+  });
+  return results;
+}
+
 let TAGS = {};
-let ranges = [];
 Object.keys(init).forEach((fnid) => {
   let article = document.getElementById(fnid);
   [...article.querySelectorAll('img')].forEach((img) => {
@@ -46,7 +88,10 @@ Object.keys(init).forEach((fnid) => {
       }
     });
   });
-  textNodesUnder(article).forEach((node) => {
+
+  let rangesByNode = {};
+  let nodes = textNodesUnder(article);
+  nodes.forEach((node, i) => {
     if (node.isElementContentWhitespace) {
       return;
     }
@@ -58,21 +103,34 @@ Object.keys(init).forEach((fnid) => {
       data.split('\n').map((t) => t.trim()).filter(Boolean).forEach((t) => {
         let idx = node.textContent.indexOf(t);
         if (idx < 0) return;
-        let range = document.createRange();
-        range.setStart(node, idx);
-        range.setEnd(node, idx+t.length);
-        ranges.push([range, m.tags, hash]);
+        if (!(i in rangesByNode)) {
+          rangesByNode[i] = [];
+        }
+        // ranges.push([node, [idx, idx+t.length], hash]);
+        rangesByNode[i].push([idx, idx+t.length, hash]);
       });
     });
   });
-});
-ranges.forEach((d) => {
-  let [r, tags, hash] = d;
-  let span = document.createElement('span');
-  span.classList.add('tagged');
-  span.dataset.tags = tags.join(', ');
-  span.dataset.hashes = hash;
-  r.surroundContents(span);
+
+  Object.keys(rangesByNode).forEach((i) => {
+    console.log(rangesByNode[i]);
+    let ranges = decomposeRanges(rangesByNode[i]);
+    let node = nodes[i];
+    let shift = 0;
+    ranges.forEach((d) => {
+      let [rStart, rEnd, hashes] = d;
+      let range = document.createRange();
+      range.setStart(node, rStart-shift);
+      range.setEnd(node, rEnd-shift);
+
+      let span = document.createElement('span');
+      span.classList.add('tagged');
+      span.dataset.hashes = hashes.join(' ');
+      range.surroundContents(span);
+      shift += (rEnd-shift);
+      node = span.nextSibling;
+    });
+  });
 });
 
 function sendTags(data) {
@@ -283,9 +341,6 @@ document.addEventListener('keydown', (ev) => {
               spans.forEach((s) => {
                 s.classList.remove('selected');
                 s.classList.add('tagged');
-                let existing = (s.dataset.tags || '').split(',').filter(Boolean);
-                let ts = [...new Set(existing.concat(tags))];
-                s.dataset.tags = ts.join(',');
                 let hashes = (s.dataset.hashes || '').split(' ').filter(Boolean);
                 hashes.push(hash);
                 s.dataset.hashes = hashes.join(' ');
@@ -328,6 +383,7 @@ document.addEventListener('keydown', (ev) => {
           ev.target.style.boxShadow = 'none';
         },
         mute: (tags) => {
+          // TODO use hashes here too
           let existing = (ev.target.dataset.tags || '').split(',').filter(Boolean);
           let ts = [...new Set(existing.concat(tags))];
           ev.target.dataset.tags = ts.join(',');
@@ -355,87 +411,84 @@ document.addEventListener('mousemove', (ev) => {
     h.remove();
   });
   if (ev.target.tagName == 'SPAN') {
-    let tags = [];
     let hashes = [];
     let node = ev.target;
     while (node.parentNode) {
-      let ts = (node.dataset.tags || '').split(',').filter(Boolean);
       let hs = (node.dataset.hashes || '').split(' ').filter(Boolean);
-      if (ts.length > 0) {
-        tags = tags.concat(ts);
+      if (hs.length > 0) {
         hashes = hashes.concat(hs);
       }
       node = node.parentNode;
     }
-    tags = [...new Set(tags)];
     hashes = [...new Set(hashes)];
-    let labels = document.createElement('div');
-    labels.style.position = 'absolute';
-    labels.style.left = '100%';
-    labels.style.top = 0;
-    labels.style.padding = '0 1em';
-    let labelParentCandidates = [];
-    hashes.forEach((h, i) => {
-      let nodes = [...document.querySelectorAll(`[data-hashes*="${h}"]`)];
-      let color = colors[i % colors.length];
-      let localhighlights = [];
+    if (hashes.length > 0) {
 
-      // Get top-most node
-      nodes.sort((a, b) => b.offsetTop - a.offsetTop);
-      labelParentCandidates.push(nodes[0]);
+      let labels = document.createElement('div');
+      labels.style.position = 'absolute';
+      labels.style.left = 0;
+      labels.style.top = 0;
+      labels.style.zIndex = 10;
+      let allNodes = [];
+      hashes.forEach((h, i) => {
+        let nodes = [...document.querySelectorAll(`[data-hashes*="${h}"]`)];
+        let color = colors[i % colors.length];
+        let localhighlights = [];
 
-      nodes.forEach((n) => {
-        n.style.position = 'relative';
-        let lineHeight = calculateLineHeight(n);
-        let elHeight = n.offsetHeight;
-        let lines = Math.ceil(elHeight/lineHeight);
-        let h = lineHeight;
-        let underline = document.createElement('div');
-        underline.style.borderTop = `2px solid ${color}`;
-        underline.style.height = `${h}px`;
-        underline.style.position = 'absolute';
-        underline.style.left = '0';
-        underline.style.right = '0';
-        underline.style.fontSize = `${h-6}px`;
-        underline.style.bottom = `-${h+i}px`;
-        underline.style.pointerEvents = 'none';
-        n.appendChild(underline);
-        highlights.push(underline);
-        localhighlights.push(underline);
-        [...Array(lines-1).keys()].forEach((l) => {
+        // Get top-most node
+        nodes.sort((a, b) => b.offsetTop - a.offsetTop);
+        allNodes = allNodes.concat(nodes);
+        nodes.forEach((n) => {
+          n.style.position = 'relative';
+          let lineHeight = calculateLineHeight(n);
+          let elHeight = n.offsetHeight;
+          let lines = Math.ceil(elHeight/lineHeight);
+          let h = lineHeight;
           let underline = document.createElement('div');
           underline.style.borderTop = `2px solid ${color}`;
           underline.style.height = `${h}px`;
           underline.style.position = 'absolute';
-          underline.style.left = `-${n.offsetWidth-n.offsetLeft}px`; // TODO
-          if (l == lines-2) {
-            let marker = document.createElement('span');
-            n.appendChild(marker);
-            underline.style.right = `${n.offsetWidth-marker.offsetLeft}px`;
-          } else {
-            underline.style.right = '0';
-          }
+          underline.style.left = '0';
+          underline.style.right = '0';
           underline.style.fontSize = `${h-6}px`;
-          underline.style.bottom = `-${h+i+((l+1)*lineHeight)}px`;
+          underline.style.bottom = `-${h+i}px`;
           underline.style.pointerEvents = 'none';
           n.appendChild(underline);
           highlights.push(underline);
+          localhighlights.push(underline);
+          [...Array(lines-1).keys()].forEach((l) => {
+            let underline = document.createElement('div');
+            underline.style.borderTop = `2px solid ${color}`;
+            underline.style.height = `${h}px`;
+            underline.style.position = 'absolute';
+            underline.style.left = `-${n.offsetLeft}px`;
+            if (l == lines-2) {
+              let marker = document.createElement('span');
+              n.appendChild(marker);
+              underline.style.right = `${n.offsetWidth-marker.offsetLeft}px`;
+            } else {
+              underline.style.right = '0';
+            }
+            underline.style.fontSize = `${h-6}px`;
+            underline.style.bottom = `-${h+i+((l+1)*lineHeight)}px`;
+            underline.style.pointerEvents = 'none';
+            n.appendChild(underline);
+            highlights.push(underline);
+          });
         });
+
+        // This should be leftmost and topmost first (min n.offsetLeft, min n.offsetTop)
+        let label = document.createElement('div');
+        label.style.background = color;
+        label.style.color = '#fff';
+        label.style.padding = '2px';
+        label.innerText = TAGS[h].join(', ');
+        labels.appendChild(label);
       });
 
-      // This should be leftmost and topmost first (min n.offsetLeft, min n.offsetTop)
-      let label = document.createElement('span');
-      // label.style.background = color;
-      label.style.color = color;
-      // label.style.color = '#fff';
-      label.style.padding = '2px';
-      label.style.display = 'inline-block';
-      label.innerText = TAGS[h].join(', '); // TODO
-      labels.appendChild(label);
-    });
-
-    labelParentCandidates.sort((a, b) => b.offsetTop - a.offsetTop);
-    labelParentCandidates[0].appendChild(labels);
-    highlights.push(labels);
+      allNodes.sort((a, b) => a.offsetLeft - b.offsetLeft);
+      allNodes[0].appendChild(labels);
+      labels.style.left = `-${allNodes[0].offsetLeft + labels.offsetWidth}px`;
+      highlights.push(labels);
+    }
   }
 });
