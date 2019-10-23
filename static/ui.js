@@ -165,6 +165,16 @@ function highlightSpan(span) {
         let lineHeight = calculateLineHeight(n);
         let lines = Math.ceil(n.offsetHeight/lineHeight);
 
+        let nn = n;
+        let leftOffset = 0;
+        while (nn !== n.offsetParent) {
+          nn = nn.parentNode;
+          let styles = window.getComputedStyle(nn);
+          leftOffset += parseInt(styles.getPropertyValue('margin-left'), 10);
+          leftOffset += parseInt(styles.getPropertyValue('padding-left'), 10);
+          leftOffset += parseInt(styles.getPropertyValue('border-left-width'), 10);
+        }
+
         // Create the underline element
         n.style.position = 'relative';
         let underline = createElement('div', {
@@ -200,7 +210,7 @@ function highlightSpan(span) {
             borderTop: `2px solid ${color}`,
             height: `${lineHeight}px`,
             position: 'absolute',
-            left: `-${n.offsetLeft}px`,
+            left: `-${n.offsetLeft-leftOffset}px`,
             right: right,
             fontSize: `${lineHeight-6}px`,
             bottom: `-${lineHeight+i+((l+1)*lineHeight)}px`,
