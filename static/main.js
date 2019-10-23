@@ -5,6 +5,16 @@ function hashTags(fnid, tags, data) {
   return md5(`${data}--${tags.join(',')}--${fnid}`);
 }
 
+function existingTags() {
+  let tags = new Set();
+  Object.values(TAGS).forEach((ts) => {
+    ts.forEach((t) => {
+      tags.add(t);
+    });
+  });
+  return [...tags];
+}
+
 // Send tag(s) to backend for saving
 function sendTags(data, cb) {
   fetch('/tag', {
@@ -28,11 +38,35 @@ function sendTags(data, cb) {
 
 loadExistingTags(init);
 
+function showInput() {
+  inputForm.style.display = 'block';
+  input.focus();
+  let tags = existingTags();
+  displayTagSuggestions(tags);
+}
+
+function displayTagSuggestions(tags) {
+  let tagList = document.getElementById('tags-in-use');
+  tagList.innerHTML = '';
+  tags.forEach((t) => {
+    let tagEl = createElement('div', {
+      padding: '0.25em',
+      background: '#000',
+      color: '#fff',
+      display: 'inline-block',
+      margin: '1px 1px 0 0'
+    });
+    tagEl.innerText = t;
+    tagList.appendChild(tagEl);
+  });
+}
+
 // Prepare tag input
 const input = document.getElementById('tag-input');
-input.addEventListener('keydown', (ev) => {
+const inputForm = document.getElementById('tag-form');
+input.addEventListener('keyup', (ev) => {
   if (ev.key == 'Enter') {
-    input.style.display = 'none';
+    inputForm.style.display = 'none';
     let tags = input.value.split(',').map((t) => t.trim()).filter(Boolean);
     if (tags.length > 0) {
       let data = {
@@ -49,6 +83,13 @@ input.addEventListener('keydown', (ev) => {
     } else {
       if (SELECTED.reset) SELECTED.reset();
     }
+  } else {
+    let vals = input.value.split(',').map((t) => t.trim()).filter(Boolean);
+    let tags = existingTags();
+    if (vals.length > 0) {
+      tags = existingTags().filter((t) => vals.some((v) => t.includes(v)));
+    }
+    displayTagSuggestions(tags);
   }
 });
 
@@ -97,8 +138,7 @@ document.addEventListener('keydown', (ev) => {
           };
 
           // Show tag input and focus
-          input.style.display = 'block';
-          input.focus();
+          showInput();
           ev.preventDefault();
         } else {
           alert('Couldn\'t find footnote id');
@@ -107,7 +147,7 @@ document.addEventListener('keydown', (ev) => {
       break;
 
     case 'Escape':
-      input.style.display = 'none';
+      inputForm.style.display = 'none';
       if (SELECTED.reset) SELECTED.reset();
       break;
   }
@@ -140,8 +180,7 @@ document.addEventListener('keydown', (ev) => {
         }
       };
       el.classList.add('selected');
-      input.style.display = 'block';
-      input.focus();
+      showInput();
     }
   });
 });

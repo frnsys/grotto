@@ -56,17 +56,20 @@ article {
   position: relative;
 }
 
-#tag-input {
+#tag-form {
   position: fixed;
   top: 1em;
   left: 2em;
   width: calc(100% - 4em);
   display: none;
+  z-index: 10;
+}
+#tag-input {
+  width: 100%;
   text-align: center;
   border: none;
   padding: 0.75em;
   background: rgba(12,12,20,0.95);
   color: #fff;
   font-size: 1em;
-  z-index: 10;
 }
