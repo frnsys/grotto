@@ -5,6 +5,7 @@
     <a href="{{request.path}}/fns">Footnotes</a>
     <a href="{{request.path}}/tags">Outline</a>
 </div>
+<input type="text" id="tag-input" />
 
 {{html|safe}}
 
@@ -12,6 +13,7 @@
 const init = {{tags|safe}};
 </script>
 <script src="{{ url_for('static', filename='md5.js') }}"></script>
+<script src="{{ url_for('static', filename='ui.js') }}"></script>
 <script src="{{ url_for('static', filename='main.js') }}"></script>
 {% endblock %}
 
