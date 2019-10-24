@@ -342,7 +342,7 @@ function loadExistingTags(tags) {
       Object.keys(tags[fnid]).forEach((data) => {
         let m = tags[fnid][data];
         if (m.type != 'image') return;
-        if (data == img.src) {
+        if (data == img.attribute['src'].value) {
           let hash = hashTags(fnid, data);
           TAGS[hash] = m.tags;
           DB[hash] = {

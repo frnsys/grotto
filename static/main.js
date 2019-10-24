@@ -189,7 +189,7 @@ document.addEventListener('keydown', (ev) => {
 
       let fnId = el.closest('article').id;
       SELECTED = {
-        data: el.src,
+        data: el.attributes['src'].value,
         fnid: fnId,
         type: 'image',
         node: el,
