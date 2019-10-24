@@ -1,5 +1,7 @@
 Simple app to facilitate tagging and footnotes of markdown notes.
 
+![](demo.gif)
+
 Assumes notes are in the format of:
 
 ```markdown
