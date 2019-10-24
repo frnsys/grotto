@@ -343,8 +343,14 @@ function loadExistingTags(tags) {
         let m = tags[fnid][data];
         if (m.type != 'image') return;
         if (data == img.src) {
-          let hash = hashTags(fnid, m.tags, data);
+          let hash = hashTags(fnid, data);
           TAGS[hash] = m.tags;
+          DB[hash] = {
+            data: data,
+            fnid: fnid,
+            type: m.type,
+            tags: m.tags
+          };
           img.dataset.hashes = hash;
           img.classList.add('tagged');
         }
@@ -361,8 +367,14 @@ function loadExistingTags(tags) {
       Object.keys(tags[fnid]).forEach((data) => {
         let m = tags[fnid][data];
         if (m.type != 'text') return;
-        let hash = hashTags(fnid, m.tags, data);
+        let hash = hashTags(fnid, data);
         TAGS[hash] = m.tags;
+        DB[hash] = {
+          data: data,
+          fnid: fnid,
+          type: m.type,
+          tags: m.tags
+        };
         data.split('\n').map((t) => t.trim()).filter(Boolean).forEach((t) => {
           let idx = node.textContent.indexOf(t);
           if (idx < 0) return;

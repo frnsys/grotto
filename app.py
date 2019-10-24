@@ -108,12 +108,9 @@ def tag():
     data = data['data']
 
     if data in db[fnid]:
+        # Update tags
         # Assume the type hasn't changed
-        # Append tag (if new)
-        existing = db[fnid][data]
-        for tag in tags:
-            if tag not in existing['tags']:
-                existing['tags'].append(tag)
+        db[fnid][data]['tags'] = tags
     else:
         # Add new entry
         db[fnid][data] = {

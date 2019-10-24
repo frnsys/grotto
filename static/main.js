@@ -1,8 +1,9 @@
 const TAGS = {};
+const DB = {};
 let SELECTED = {};
 
-function hashTags(fnid, tags, data) {
-  return md5(`${data}--${tags.join(',')}--${fnid}`);
+function hashTags(fnid, data) {
+  return md5(`${data}--${fnid}`);
 }
 
 function existingTags() {
@@ -72,11 +73,21 @@ input.addEventListener('keyup', (ev) => {
       let data = {
         data: SELECTED.data.trim(),
         fnid: SELECTED.fnid,
-        type: SELECTED.type,
-        tags: tags
+        type: SELECTED.type
       };
-      let hash = hashTags(SELECTED.fnid, tags, SELECTED.data.trim());
+      let hash = hashTags(SELECTED.fnid, SELECTED.data.trim());
       TAGS[hash] = tags;
+      if (hash in DB) {
+        DB[hash].tags = tags;
+      } else {
+        DB[hash] = {
+          data: data.data,
+          fnid: data.fnid,
+          type: data.type,
+          tags: tags
+        };
+      }
+      data.tags = TAGS[hash];
       sendTags(data, () => {
         if (SELECTED.highlight) SELECTED.highlight(hash);
       });
@@ -121,7 +132,6 @@ document.addEventListener('keydown', (ev) => {
             data: data,
             fnid: fnId,
             type: 'text',
-            node: selection.anchorNode,
             reset: () => {
               unhighlightSpans(spans);
             },
@@ -193,5 +203,56 @@ document.addEventListener('mousemove', (ev) => {
     highlightSpan(ev.target);
   } else if (ev.target.tagName == 'IMG') {
     highlightImage(ev.target);
+  }
+});
+
+document.addEventListener('click', (ev) => {
+  let selection = window.getSelection();
+  if (['SPAN', 'IMG'].includes(ev.target.tagName) && selection.toString().trim().length == 0) {
+    let hs = hashesForNode(ev.target);
+    if (hs.length > 0) {
+      if (SELECTED.reset) SELECTED.reset();
+
+      // Pick hash representing shortest
+      // text content, which should be the
+      // most "specific" hash
+      let sorted = hs.map((h) => {
+        let nodes = [...document.querySelectorAll(`[data-hashes*="${h}"]`)];
+        let length = nodes.reduce((acc, n) => {
+          return acc + n.textContent.length;
+        }, 0);
+        return [h, length];
+      }).sort((a, b) => a[1] - b[1]).map((a) => a[0]);
+      let hash = sorted[0];
+
+      let dataForHash = DB[hash];
+      let nodes = [...document.querySelectorAll(`[data-hashes*="${hash}"]`)];
+      nodes.forEach((n) => {
+        n.classList.add('selected');
+      });
+
+      SELECTED = {
+        data: dataForHash.data,
+        fnid: dataForHash.fnid,
+        type: dataForHash.type,
+
+        reset: () => {
+          nodes.forEach((n) => {
+            n.classList.remove('selected');
+          });
+        },
+
+        // Already highlighted, don't need to do anything
+        // except reset
+        highlight: () => {
+          nodes.forEach((n) => {
+            n.classList.remove('selected');
+          });
+        }
+      };
+
+      input.value = dataForHash.tags.join(', ');
+      showInput();
+    }
   }
 });
