@@ -73,7 +73,8 @@ input.addEventListener('keyup', (ev) => {
       let data = {
         data: SELECTED.data.trim(),
         fnid: SELECTED.fnid,
-        type: SELECTED.type
+        type: SELECTED.type,
+        tags: tags
       };
       let hash = hashTags(SELECTED.fnid, SELECTED.data.trim());
       TAGS[hash] = tags;
@@ -87,12 +88,26 @@ input.addEventListener('keyup', (ev) => {
           tags: tags
         };
       }
-      data.tags = TAGS[hash];
       sendTags(data, () => {
         if (SELECTED.highlight) SELECTED.highlight(hash);
       });
     } else {
       if (SELECTED.reset) SELECTED.reset();
+
+      let hash = hashTags(SELECTED.fnid, SELECTED.data.trim());
+
+      // Delete if tags are empty
+      if (hash in DB) {
+        let data = {
+          data: SELECTED.data.trim(),
+          fnid: SELECTED.fnid,
+          type: SELECTED.type,
+          tags: tags
+        };
+        sendTags(data, () => {
+          if (SELECTED.untag) SELECTED.untag(hash); // TODO
+        });
+      }
     }
   } else {
     let vals = input.value.split(',').map((t) => t.trim()).filter(Boolean);
@@ -247,6 +262,20 @@ document.addEventListener('click', (ev) => {
         highlight: () => {
           nodes.forEach((n) => {
             n.classList.remove('selected');
+          });
+        },
+
+        untag: (hash) => {
+          nodes.forEach((n) => {
+
+            let hashes = hashesForNode(n);
+            let idx = hashes.indexOf(hash);
+            if (idx !== -1) hashes.splice(idx, 1);
+            n.dataset.hashes = hashes.join(' ');
+
+            if (hashes.length == 0) {
+              n.classList.remove('tagged');
+            }
           });
         }
       };
