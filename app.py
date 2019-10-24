@@ -110,7 +110,12 @@ def tag():
     if data in db[fnid]:
         # Update tags
         # Assume the type hasn't changed
-        db[fnid][data]['tags'] = tags
+        if tags:
+            db[fnid][data]['tags'] = tags
+
+        # If no tags, delete this
+        else:
+            del db[fnid][data]
     else:
         # Add new entry
         db[fnid][data] = {

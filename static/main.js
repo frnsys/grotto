@@ -90,6 +90,7 @@ input.addEventListener('keyup', (ev) => {
       }
       sendTags(data, () => {
         if (SELECTED.highlight) SELECTED.highlight(hash);
+        SELECTED = {};
       });
     } else {
       if (SELECTED.reset) SELECTED.reset();
