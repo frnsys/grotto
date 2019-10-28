@@ -36,6 +36,7 @@ function calculateLineHeight(element) {
 }
 
 
+// Get all nodes between two nodes
 function getBetweenNodes(startNode, endNode, commonAncestor) {
   // Find all of endContainer's ancestors up to
   // the common ancestor
@@ -229,7 +230,7 @@ function highlightSpan(span) {
         color: '#fff',
         padding: '2px'
       });
-      label.innerText = TAGS[h].join(', ');
+      label.innerHTML = TAGS[h].join('<br />');
       labels.appendChild(label);
     });
 
