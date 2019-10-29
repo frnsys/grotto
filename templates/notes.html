@@ -7,7 +7,7 @@
 </div>
 <div id="tag-form">
     <input type="text" id="tag-input" />
-    <div id="tags-in-use"></div>
+    <div id="tag-list"></div>
 </div>
 
 {{html|safe}}
@@ -16,7 +16,11 @@
 const init = {{tags|safe}};
 </script>
 <script src="{{ url_for('static', filename='md5.js') }}"></script>
-<script src="{{ url_for('static', filename='ui.js') }}"></script>
+<script src="{{ url_for('static', filename='db.js') }}"></script>
+<script src="{{ url_for('static', filename='ui/ui.js') }}"></script>
+<script src="{{ url_for('static', filename='ui/input.js') }}"></script>
+<script src="{{ url_for('static', filename='ui/paint.js') }}"></script>
+<script src="{{ url_for('static', filename='ui/select.js') }}"></script>
 <script src="{{ url_for('static', filename='main.js') }}"></script>
 {% endblock %}
 

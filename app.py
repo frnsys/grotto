@@ -116,7 +116,7 @@ def tag():
         # If no tags, delete this
         else:
             del db[fnid][data]
-    else:
+    elif tags:
         # Add new entry
         db[fnid][data] = {
             'type': type,
