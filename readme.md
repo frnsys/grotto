@@ -1,3 +1,5 @@
+# grotto
+
 Simple app to facilitate tagging and footnotes of markdown notes.
 
 ![](demo.gif)
@@ -48,3 +50,4 @@ Each article has an id generated for it (the `base64` encoded data preceding eac
 
 - To generate markdown-formatted footnotes, click on the `Footnotes` link.
 - To generate an "outline" (tagged texts/images grouped by tag), click on the `Outline` link.
+- Highlights are assumed to be unique on an article id and highlighted text or image source basis. So if you tag the text "the cat in the hat" in article `abc123` and "the cat in the hat" occurs elsewhere in that article, both instances are treated as identical.
