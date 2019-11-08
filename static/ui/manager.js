@@ -36,7 +36,6 @@ class UIManager {
     let state = localStorage.getItem(id);
     state = state !== 'hidden' ? 'hidden' : 'visible';
     this.set(article, state);
-    localStorage.setItem(id, state);
   }
 
   set(article, state) {
@@ -55,6 +54,7 @@ class UIManager {
     [...article.children].slice(3).forEach((el) => {
       el.style.display = display;
     });
+    localStorage.setItem(article.id, state);
   }
 
   listTags() {
@@ -85,5 +85,18 @@ class UIManager {
       let id = article.id;
       article.querySelector('.highlighted').style.display = ids.includes(id) ? 'inline' : 'none';
     });
+  }
+
+  // Get the id of the active article
+  activeArticle() {
+    let top = window.pageYOffset;
+
+    // Only consider open articles
+    let articles = [...document.querySelectorAll('article')].filter((a) => {
+      let state = localStorage.getItem(a.id);
+      return state != 'hidden';
+    });
+    articles.reverse();
+    return articles.find((a) => a.offsetTop < top);
   }
 }

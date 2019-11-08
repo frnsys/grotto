@@ -37,8 +37,18 @@ document.addEventListener('keydown', (ev) => {
       input.hide();
       selector.reset();
       break;
+
+    // Stash/hide article
+    case 'h':
+      let article = manager.activeArticle();
+      if (article) {
+        manager.set(article, 'hidden');
+        window.scrollTo({top: article.offsetTop});
+      }
+      break;
   }
 });
+
 
 // Ctrl+click images to select
 [...document.querySelectorAll('img')].map((el) => {
