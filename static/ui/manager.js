@@ -87,16 +87,38 @@ class UIManager {
     });
   }
 
-  // Get the id of the active article
-  activeArticle() {
-    let top = window.pageYOffset;
-
-    // Only consider open articles
-    let articles = [...document.querySelectorAll('article')].filter((a) => {
+  openArticles() {
+    return [...document.querySelectorAll('article')].filter((a) => {
       let state = localStorage.getItem(a.id);
       return state != 'hidden';
     });
+  }
+
+  // Get the id of the active article
+  activeArticle() {
+    let top = Math.round(window.pageYOffset);
+
+    // Only consider open articles
+    let articles = this.openArticles();
     articles.reverse();
-    return articles.find((a) => a.offsetTop < top);
+    return articles.find((a) => a.offsetTop <= top);
+  }
+
+  prevArticle() {
+    let active = this.activeArticle();
+    if (active) {
+      let articles = this.openArticles();
+      let idx = articles.indexOf(active);
+      if (idx > 0) return articles[idx-1];
+    }
+  }
+
+  nextArticle() {
+    let active = this.activeArticle();
+    if (active) {
+      let articles = this.openArticles();
+      let idx = articles.indexOf(active);
+      if (idx < articles.length - 1) return articles[idx+1];
+    }
   }
 }

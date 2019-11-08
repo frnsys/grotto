@@ -39,13 +39,27 @@ document.addEventListener('keydown', (ev) => {
       break;
 
     // Stash/hide article
-    case 'h':
+    case 'h': {
       let article = manager.activeArticle();
       if (article) {
         manager.set(article, 'hidden');
         window.scrollTo({top: article.offsetTop});
       }
-      break;
+    } break;
+
+    case 'J': {
+      let article = manager.nextArticle();
+      if (article) {
+        window.scrollTo({top: article.offsetTop});
+      }
+    } break;
+
+    case 'K': {
+      let article = manager.prevArticle();
+      if (article) {
+        window.scrollTo({top: article.offsetTop});
+      }
+    } break;
   }
 });
 
