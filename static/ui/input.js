@@ -49,7 +49,7 @@ class TagInput {
 
   updateTagSuggestions() {
     let vals = this.inputTags();
-    let tags = this.state.db.allTags();
+    let tags = this.state.db.tags();
     if (vals.length > 0) {
       tags = tags.filter((t) => vals.some((v) => t.includes(v)));
     }

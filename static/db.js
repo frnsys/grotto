@@ -46,7 +46,7 @@ class Database {
     });
   }
 
-  allTags() {
+  tags() {
     let tags = new Set();
     Object.values(this.db).forEach((d) => {
       d.tags.forEach((t) => {
@@ -64,6 +64,14 @@ class Database {
       });
     });
     return counts;
+  }
+
+  articles() {
+    let ids = new Set();
+    Object.values(this.db).forEach((d) => {
+      ids.add(d.fnid);
+    });
+    return [...ids];
   }
 
   keys() {

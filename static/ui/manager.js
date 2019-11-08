@@ -1,10 +1,22 @@
 class UIManager {
-  constructor() {
+  constructor(state) {
+    this.state = state;
     [...document.querySelectorAll('article')].forEach((article) => {
-      let toggle = document.createElement('div');
+      let bar = document.createElement('div');
+      bar.classList.add('article-bar');
+
+      let highlighted = document.createElement('span');
+      highlighted.classList.add('highlighted');
+      highlighted.innerText = '🖍️';
+      highlighted.style.display = 'none';
+      bar.appendChild(highlighted);
+
+      let toggle = document.createElement('span');
       toggle.classList.add('stash-toggle');
       toggle.innerText = '👁️';
-      article.prepend(toggle);
+      bar.appendChild(toggle);
+
+      article.prepend(bar);
 
       let id = article.id;
       toggle.addEventListener('click', (ev) => {
@@ -16,6 +28,7 @@ class UIManager {
     });
 
     this.listTags();
+    this.flagHighlighted();
   }
 
   toggle(id) {
@@ -49,7 +62,7 @@ class UIManager {
     while (allTagsList.firstChild) {
       allTagsList.removeChild(allTagsList.firstChild);
     }
-    let tagCounts = STATE.db.tagCounts();
+    let tagCounts = this.state.db.tagCounts();
     Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]).forEach((t) => {
       let div = document.createElement('div');
 
@@ -63,6 +76,14 @@ class UIManager {
       div.appendChild(tag);
 
       allTagsList.appendChild(div);
+    });
+  }
+
+  flagHighlighted() {
+    let ids = this.state.db.articles();
+    [...document.querySelectorAll('article')].forEach((article) => {
+      let id = article.id;
+      article.querySelector('.highlighted').style.display = ids.includes(id) ? 'inline' : 'none';
     });
   }
 }

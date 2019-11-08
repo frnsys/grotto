@@ -14,8 +14,11 @@ const input = new TagInput(STATE,
 const painter = new Painter(STATE, COLORS);
 const selector = new Selector(STATE, painter);
 painter.setTagged(STATE.db);
-const manager = new UIManager();
-STATE.db.on('save', () => manager.listTags());
+const manager = new UIManager(STATE);
+STATE.db.on('save', () => {
+  manager.listTags();
+  manager.flagHighlighted();
+});
 
 // Main inputs, for creating a tag
 document.addEventListener('keydown', (ev) => {

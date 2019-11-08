@@ -74,12 +74,15 @@ article {
   font-size: 1em;
 }
 
-.stash-toggle {
+.article-bar {
 	position: absolute;
 	top: 0;
-	left: -2em;
+	left: 0;
+  transform: translate(-100%, 0);
 	padding: 0.25em 0.5em;
 	line-height: 0.9;
+}
+.stash-toggle {
   cursor: pointer;
   filter: grayscale(1);
 }
@@ -95,6 +98,11 @@ article {
 	max-width: 70%;
 	margin: 0;
 	vertical-align: middle;
+}
+.highlighted {
+  font-size: 0.75em;
+	vertical-align: middle;
+  margin-right: 0.25em;
 }
 
 #all-tags {
