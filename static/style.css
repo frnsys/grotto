@@ -73,3 +73,26 @@ article {
   color: #fff;
   font-size: 1em;
 }
+
+.stash-toggle {
+	position: absolute;
+	top: 0;
+	left: -2em;
+	padding: 0.25em 0.5em;
+	line-height: 0.9;
+  cursor: pointer;
+  filter: grayscale(1);
+}
+.stash-toggle:hover {
+  filter: grayscale(0);
+}
+.stashed-title {
+	font-size: 0.8em;
+	display: inline-block;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden;
+	max-width: 70%;
+	margin: 0;
+	vertical-align: middle;
+}

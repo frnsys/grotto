@@ -14,6 +14,7 @@ const input = new TagInput(STATE,
 const painter = new Painter(STATE, COLORS);
 const selector = new Selector(STATE, painter);
 painter.setTagged(STATE.db);
+const manager = new UIManager();
 
 // Main inputs, for creating a tag
 document.addEventListener('keydown', (ev) => {
