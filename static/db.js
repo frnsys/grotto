@@ -1,6 +1,9 @@
 class Database {
   constructor(tags) {
     this.db = {};
+    this.cbs = {
+      'save': []
+    };
 
     Object.keys(tags).forEach((fnid) => {
       Object.keys(tags[fnid]).forEach((data) => {
@@ -14,6 +17,10 @@ class Database {
         };
       });
     });
+  }
+
+  on(ev, fn) {
+    this.cbs[ev].push(fn);
   }
 
   save(selected, tags, onSave) {
@@ -35,6 +42,7 @@ class Database {
     }
     sendTags(data, () => {
       onSave(hash)
+      this.cbs['save'].forEach((fn) => fn());
     });
   }
 
@@ -46,6 +54,16 @@ class Database {
       });
     });
     return [...tags];
+  }
+
+  tagCounts() {
+    let counts = {};
+    Object.values(this.db).forEach((d) => {
+      d.tags.forEach((t) => {
+        counts[t] = (counts[t] || 0) + 1;
+      });
+    });
+    return counts;
   }
 
   keys() {

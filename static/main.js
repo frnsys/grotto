@@ -15,6 +15,7 @@ const painter = new Painter(STATE, COLORS);
 const selector = new Selector(STATE, painter);
 painter.setTagged(STATE.db);
 const manager = new UIManager();
+STATE.db.on('save', () => manager.listTags());
 
 // Main inputs, for creating a tag
 document.addEventListener('keydown', (ev) => {

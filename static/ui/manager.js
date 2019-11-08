@@ -14,6 +14,8 @@ class UIManager {
       let state = localStorage.getItem(article.id);
       this.set(article, state);
     });
+
+    this.listTags();
   }
 
   toggle(id) {
@@ -39,6 +41,28 @@ class UIManager {
     // these are the stash toggle and the id indicator
     [...article.children].slice(3).forEach((el) => {
       el.style.display = display;
+    });
+  }
+
+  listTags() {
+    const allTagsList = document.getElementById('all-tags');
+    while (allTagsList.firstChild) {
+      allTagsList.removeChild(allTagsList.firstChild);
+    }
+    let tagCounts = STATE.db.tagCounts();
+    Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]).forEach((t) => {
+      let div = document.createElement('div');
+
+      let count = document.createElement('span');
+      count.classList.add('tag-count');
+      count.innerText = tagCounts[t];
+      div.appendChild(count);
+
+      let tag = document.createElement('span');
+      tag.innerText = t;
+      div.appendChild(tag);
+
+      allTagsList.appendChild(div);
     });
   }
 }
