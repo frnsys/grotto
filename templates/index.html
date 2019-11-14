@@ -1,0 +1,11 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<ul>
+    {% for path, name in files %}
+        <li><a href="{{ path }}">{{ name }}</a></li>
+    {% endfor %}
+</ul>
+{% endblock %}
+
+

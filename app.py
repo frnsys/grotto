@@ -25,34 +25,39 @@ def index():
 def notes(path):
     """Render single or directory of notes for tagging"""
     files = get_files(path)
-    fns, idx = fn.make_footnotes(files)
-    ids = {c: id for id, c in idx.items()}
+    if len(files) == 1:
+        fns, idx = fn.make_footnotes(files)
+        ids = {c: id for id, c in idx.items()}
 
-    docs = []
-    for f in files:
-        lines = []
-        for l in open(f, 'r').read().splitlines():
-            if l.startswith('# '):
-                if lines:
-                    html = md2html.compile_markdown('\n'.join(lines))
-                    docs.append(html)
-                    docs.append('</article>')
-                    lines = []
-                c = l.strip('# ')
-                docs.append('<article id="{id}"><a class="fn-ref" id="{id}">{id}</a>'.format(id=ids[c]))
-            lines.append(l)
-        if lines:
-            html = md2html.compile_markdown('\n'.join(lines))
-            docs.append(html)
-            docs.append('</article>')
+        docs = []
+        for f in files:
+            lines = []
+            for l in open(f, 'r').read().splitlines():
+                if l.startswith('# '):
+                    if lines:
+                        html = md2html.compile_markdown('\n'.join(lines))
+                        docs.append(html)
+                        docs.append('</article>')
+                        lines = []
+                    c = l.strip('# ')
+                    docs.append('<article id="{id}"><a class="fn-ref" id="{id}">{id}</a>'.format(id=ids[c]))
+                lines.append(l)
+            if lines:
+                html = md2html.compile_markdown('\n'.join(lines))
+                docs.append(html)
+                docs.append('</article>')
 
-    html = '\n'.join(docs)
-    tags = {}
-    for fnid in idx.keys():
-        if fnid in db:
-            tags[fnid] = db[fnid]
+        html = '\n'.join(docs)
+        tags = {}
+        for fnid in idx.keys():
+            if fnid in db:
+                tags[fnid] = db[fnid]
 
-    return render_template('notes.html', html=html, tags=json.dumps(tags))
+        return render_template('notes.html', html=html, tags=json.dumps(tags))
+    else:
+        path = os.path.join(config.NOTES_DIR, path)
+        files = [(f.replace(config.NOTES_DIR, ''), os.path.relpath(f, path)) for f in sorted(files)]
+        return render_template('index.html', files=files)
 
 
 @app.route('/<path:path>/assets/<path:asset_path>')
@@ -71,6 +76,14 @@ def footnotes(path):
     # Only show footnotes in db
     only = db.keys()
     fns, idx = fn.make_footnotes(files, id_len=config.FNID_LEN, only=only)
+    return Response('\n'.join(fns), mimetype='text/plain')
+
+
+@app.route('/<path:path>/fns/all')
+def all_footnotes(path):
+    """Render markdown for footnotes"""
+    files = get_files(path)
+    fns, idx = fn.make_footnotes(files, id_len=config.FNID_LEN)
     return Response('\n'.join(fns), mimetype='text/plain')
 
 
