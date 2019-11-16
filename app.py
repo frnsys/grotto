@@ -140,5 +140,10 @@ def tag():
     return jsonify(ok=True)
 
 
+@app.route('/tags')
+def tags():
+    return jsonify(tags=db.tags())
+
+
 if __name__ == '__main__':
     app.run(debug=True)

@@ -47,24 +47,46 @@ class TagInput {
     });
   }
 
-  updateTagSuggestions() {
-    let vals = this.inputTags();
-    let tags = this.state.db.tags();
-    if (vals.length > 0) {
-      tags = tags.filter((t) => vals.some((v) => t.includes(v)));
-    }
+  getAllTags(cb) {
+    fetch('/tags', {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      method: 'GET',
+    }).then((res) => {
+      if (!res.ok) {
+        alert(`Bad response from server: ${res.status}`);
+      } else {
+        return res.json();
+      }
+    }, (err) => {
+      alert(err.message);
+    }).then((json) => {
+      cb(json.tags);
+    });
+  }
 
-    this.tagList.innerHTML = '';
-    tags.forEach((t) => {
-      let tagEl = createElement('div', {
-        padding: '0.25em',
-        background: '#000',
-        color: '#fff',
-        display: 'inline-block',
-        margin: '1px 1px 0 0'
+  updateTagSuggestions() {
+    this.getAllTags((tags) => {
+      tags = Object.entries(tags).sort((tA, tB) => tB[1] - tA[1]);
+      let vals = this.inputTags();
+      if (vals.length > 0) {
+        tags = tags.filter(([t, count]) => vals.some((v) => t.includes(v)));
+      }
+
+      this.tagList.innerHTML = '';
+      tags.forEach(([t, count]) => {
+        let tagEl = createElement('div', {
+          padding: '0.25em',
+          background: '#000',
+          color: '#fff',
+          display: 'inline-block',
+          margin: '1px 1px 0 0'
+        });
+        tagEl.innerText = `${t} (${count})`;
+        this.tagList.appendChild(tagEl);
       });
-      tagEl.innerText = t;
-      this.tagList.appendChild(tagEl);
     });
   }
 }

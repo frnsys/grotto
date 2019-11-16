@@ -47,3 +47,12 @@ class CSVDB:
 
     def keys(self):
         return self.data.keys()
+
+    def tags(self):
+        """Get all tags, with counts"""
+        tags = defaultdict(int)
+        for d in self.data.values():
+            for a in d.values():
+                for t in a['tags']:
+                    tags[t] += 1
+        return tags
