@@ -4,7 +4,7 @@
 <h1>{{ tag }}</h1>
 <div>
     {% for fnid, data in tagged.items() %}
-        <article>
+        <article id={{ fnid }}>
             <a class="fn-ref" href="/source/{{ fnid }}">{{ fnid }}</a>
             <h4>{{ sources[fnid] }}</h4>
             {% autoescape false %}
@@ -36,4 +36,15 @@
         <a name="{{ tag }}" class="tag" href="/tag/{{ tag }}" style="opacity:{{count/total}};">{{ tag }} ({{ count }})</a>
     {% endfor %}
 </div>
+
+<script>
+document.addEventListener('copy', function(e){
+  let selection = window.getSelection();
+  let text = selection.toString();
+  let article = selection.anchorNode.closest('article');
+  let fnid = article.id;
+  e.clipboardData.setData('text/plain', `${text} [^${fnid}]`);
+  e.preventDefault();
+});
+</script>
 {% endblock %}

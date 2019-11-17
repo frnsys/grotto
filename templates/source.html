@@ -15,5 +15,13 @@
         </div>
     {% endfor %}
 </div>
-{% endblock %}
 
+<script>
+document.addEventListener('copy', function(e){
+  let selection = window.getSelection();
+  let text = selection.toString();
+  e.clipboardData.setData('text/plain', `${text} [^${fnid}]`);
+  e.preventDefault();
+});
+</script>
+{% endblock %}
