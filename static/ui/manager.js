@@ -1,6 +1,8 @@
 class UIManager {
   constructor(state) {
     this.state = state;
+
+    // Manage article state (e.g. collapsed or not)
     [...document.querySelectorAll('article')].forEach((article) => {
       let bar = document.createElement('div');
       bar.classList.add('article-bar');
@@ -58,6 +60,7 @@ class UIManager {
   }
 
   listTags() {
+    // List all tags used in this note
     const allTagsList = document.getElementById('all-tags');
     while (allTagsList.firstChild) {
       allTagsList.removeChild(allTagsList.firstChild);
@@ -71,7 +74,8 @@ class UIManager {
       count.innerText = tagCounts[t];
       div.appendChild(count);
 
-      let tag = document.createElement('span');
+      let tag = document.createElement('a');
+      tag.href = `/tag/${t}`;
       tag.innerText = t;
       div.appendChild(tag);
 

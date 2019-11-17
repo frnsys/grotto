@@ -121,6 +121,13 @@ article {
 	overflow-y: scroll;
 	scrollbar-width: none;
 }
+#all-tags a {
+  color: #888;
+  text-decoration: none;
+}
+#all-tags a:hover {
+  text-decoration: underline;
+}
 .tag-count {
   color: #bbb;
   margin-right: 0.25em;
