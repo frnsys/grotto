@@ -9,7 +9,7 @@
             <h4>{{ sources[fnid] }}</h4>
             {% autoescape false %}
                 {% for d, tags in data %}
-                    <div class="tagged-data">{{ d|replace('\n', '<br />') }}</div>
+                    <div class="tagged-data">{{ d }}</div>
                     <div class="tagged-data--tags">
                         {% for t in tags %}
                             <a href="/tag/{{ t }}">{{ t }}</a>{% if not loop.last %},{% endif %}

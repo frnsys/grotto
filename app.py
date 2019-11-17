@@ -148,12 +148,15 @@ def tags():
 @app.route('/tag/<tag>')
 def view_tag(tag):
     tagged, cotags = db.tagged(tag)
+    for fnid, d in tagged.items():
+        tagged[fnid] = [(md2html.compile_markdown(c), tags) for c, tags in d]
     return render_template('tag.html', tag=tag, tagged=tagged, cotags=cotags, sources=db.sources)
 
 @app.route('/source/<fnid>')
 def view_source(fnid):
     tagged = db.data[fnid]
     citation = db.sources[fnid]
+    tagged = [(md2html.compile_markdown(c), meta) for c, meta in tagged.items()]
     return render_template('source.html', fnid=fnid, citation=citation, tagged=tagged)
 
 

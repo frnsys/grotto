@@ -4,8 +4,10 @@
 <a class="fn-ref" href="/source/{{ fnid }}">{{ fnid }}</a>
 <h1>{{ citation }}</h1>
 <div>
-    {% for data, meta in tagged.items() %}
-        <div class="tagged-data">{{ data|replace('\n', '<br />') }}</div>
+    {% for data, meta in tagged %}
+        {% autoescape false %}
+            <div class="tagged-data">{{ data }}</div>
+        {% endautoescape %}
         <div class="tagged-data--tags">
             {% for t in meta['tags'] %}
                 <a href="/tag/{{ t }}">{{ t }}</a>{% if not loop.last %},{% endif %}
