@@ -17,9 +17,6 @@ def get_files(path):
     else:
         return glob(os.path.join(config.NOTES_DIR, path, '*.md'))
 
-@app.route('/')
-def index():
-    return render_template('test.html')
 
 @app.route('/<path:path>')
 def notes(path):
@@ -52,6 +49,8 @@ def notes(path):
         for fnid in idx.keys():
             if fnid in db:
                 tags[fnid] = db[fnid]
+                for v in tags[fnid].values():
+                    v['cite'] = idx[fnid]
 
         return render_template('notes.html', html=html, tags=json.dumps(tags))
     else:
@@ -110,11 +109,11 @@ def outline(path):
     return Response('\n'.join(outline), mimetype='text/plain')
 
 
-
 @app.route('/tag', methods=['POST'])
 def tag():
     """Endpoint for saving tags"""
     data = request.get_json()
+    cite = data['cite']
     fnid = data['fnid']
     tags = data['tags']
     type = data['type']
@@ -136,6 +135,7 @@ def tag():
             'tags': tags
         }
 
+    db.sources[fnid] = cite
     db.save()
     return jsonify(ok=True)
 
@@ -143,6 +143,24 @@ def tag():
 @app.route('/tags')
 def tags():
     return jsonify(tags=db.tags())
+
+
+@app.route('/tag/<tag>')
+def view_tag(tag):
+    tagged, cotags = db.tagged(tag)
+    return render_template('tag.html', tag=tag, tagged=tagged, cotags=cotags, sources=db.sources)
+
+@app.route('/source/<fnid>')
+def view_source(fnid):
+    tagged = db.data[fnid]
+    citation = db.sources[fnid]
+    return render_template('source.html', fnid=fnid, citation=citation, tagged=tagged)
+
+
+@app.route('/')
+def browse():
+    tags = sorted(db.tags().items(), key=lambda kv: kv[1], reverse=True)
+    return render_template('browse.html', tags=tags)
 
 
 if __name__ == '__main__':

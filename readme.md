@@ -29,7 +29,7 @@ That is, documents are separated by `---`, followed by the citation starting wit
 
 Edit the following values in `config.py`:
 
-- `DB_PATH`: where the tag database (in CSV format) will be saved.
+- `DB_PATH`: where the database files (in CSV format) will be saved.
 - `NOTES_DIR`: the directory to look for markdown notes in.
 
 ## Usage

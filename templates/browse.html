@@ -1,0 +1,23 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<input id="tag-input" type="text" autofocus>
+<div class="tags">
+    {% for tag, count in tags %}
+        <a name="{{ tag }}" class="tag" href="/tag/{{ tag }}">{{ tag }} ({{ count }})</a>
+    {% endfor %}
+</div>
+<script>
+document.getElementById('tag-input').addEventListener('keyup', (ev) => {
+    let val = ev.target.value;
+    [...document.querySelectorAll('.tags a')].forEach((a) => {
+        let tag = a.name;
+        if (tag.includes(val)) {
+            a.style.display = 'inline-block';
+        } else {
+            a.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

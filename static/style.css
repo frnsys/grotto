@@ -16,6 +16,11 @@ h1 {
   background: #222;
   padding: 0.25em 0.5em;
   line-height: 1;
+  text-decoration: none;
+}
+.fn-ref:hover {
+  background: #FDC007;
+  color: #000;
 }
 .links {
   position: fixed;
@@ -120,4 +125,37 @@ article {
   color: #bbb;
   margin-right: 0.25em;
   font-size: 0.85em;
+}
+
+
+.tags {
+  margin: 1em 0;
+  padding: 0;
+}
+.tag {
+  padding: 0.25em;
+  background: #000;
+  color: #fff;
+  display: inline-block;
+  margin: 1px 1px 0px 0px;
+  text-decoration: none;
+}
+.tag:hover {
+  background: #FDC007;
+  color: #000;
+}
+
+.tagged-data {
+  margin-top: 1em;
+}
+.tagged-data--tags {
+  font-size: 0.9em;
+  margin-bottom: 2em;
+}
+.tagged-data--tags a {
+  color: #777;
+  text-decoration: none;
+}
+.tagged-data--tags a:hover {
+  text-decoration: underline;
 }

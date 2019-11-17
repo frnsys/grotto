@@ -77,13 +77,8 @@ class TagInput {
 
       this.tagList.innerHTML = '';
       tags.forEach(([t, count]) => {
-        let tagEl = createElement('div', {
-          padding: '0.25em',
-          background: '#000',
-          color: '#fff',
-          display: 'inline-block',
-          margin: '1px 1px 0 0'
-        });
+        let tagEl = createElement('div', {});
+        tagEl.classList.add('tag');
         tagEl.innerText = `${t} (${count})`;
         this.tagList.appendChild(tagEl);
       });

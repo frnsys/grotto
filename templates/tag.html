@@ -1,0 +1,39 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h1>{{ tag }}</h1>
+<div>
+    {% for fnid, data in tagged.items() %}
+        <article>
+            <a class="fn-ref" href="/source/{{ fnid }}">{{ fnid }}</a>
+            <h4>{{ sources[fnid] }}</h4>
+            {% autoescape false %}
+                {% for d, tags in data %}
+                    <div class="tagged-data">{{ d|replace('\n', '<br />') }}</div>
+                    <div class="tagged-data--tags">
+                        {% for t in tags %}
+                            <a href="/tag/{{ t }}">{{ t }}</a>{% if not loop.last %},{% endif %}
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            {% endautoescape %}
+        </article>
+    {% endfor %}
+</div>
+
+<h3>Direct co-tags</h3>
+<div class="tags">
+    {% set total = cotags['direct'].values()|max %}
+    {% for tag, count in cotags['direct'].items()|sort(attribute='1', reverse=True) %}
+        <a name="{{ tag }}" class="tag" href="/tag/{{ tag }}" style="opacity:{{count/total}};">{{ tag }} ({{ count }})</a>
+    {% endfor %}
+</div>
+
+<h3>Indirect co-tags</h3>
+<div class="tags">
+    {% set total = cotags['indirect'].values()|max %}
+    {% for tag, count in cotags['indirect'].items()|sort(attribute='1', reverse=True) %}
+        <a name="{{ tag }}" class="tag" href="/tag/{{ tag }}" style="opacity:{{count/total}};">{{ tag }} ({{ count }})</a>
+    {% endfor %}
+</div>
+{% endblock %}

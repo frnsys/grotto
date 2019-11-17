@@ -11,7 +11,9 @@ class Selector {
   getTextSelection() {
     let selection = window.getSelection();
     if (selection.anchorNode && !selection.isCollapsed) {
-      let fnId = selection.anchorNode.parentNode.closest('article').id;
+      let article = selection.anchorNode.parentNode.closest('article');
+      let fnId = article.id;
+      let cite = article.querySelector('h1').innerText;
 
       if (!fnId) return;
 
@@ -21,6 +23,7 @@ class Selector {
 
       return {
         data: data,
+        cite: cite,
         fnid: fnId,
         type: 'text',
         range: range
@@ -58,9 +61,12 @@ class Selector {
   }
 
   getImageSelection(el) {
-    let fnId = el.closest('article').id;
+    let article = el.closest('article');
+    let fnId = article.id;
+    let cite = article.querySelector('h1').innerText;
     return {
       data: el.attributes['src'].value,
+      cite: cite,
       fnid: fnId,
       type: 'image',
       node: el,
@@ -98,6 +104,7 @@ class Selector {
       return {
         tags: data.tags,
         data: data.data,
+        cite: data.cite,
         fnid: data.fnid,
         type: data.type,
 
