@@ -46,6 +46,10 @@ To tag highlights in this note, select some text and hit `t`, then enter your ta
 
 Each article has an id generated for it (the `base64` encoded data preceding each article title). This id is generated from the article "title" (what follows the `#`, assumed to be a citation--see above). When you add tags, the tags and highlighted text or image path are associated with that article id in the saved CSV (specified with the `DB_PATH` configuration variable).
 
+### Browsing tags
+
+Visit `http://localhost:5000/` to browse and search through tags. This will also show you directly and indirectly co-occurring tags.
+
 ### Other items of note
 
 - To generate markdown-formatted footnotes, click on the `Footnotes` link.
