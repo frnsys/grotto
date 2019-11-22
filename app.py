@@ -52,7 +52,7 @@ def notes(path):
                 for v in tags[fnid].values():
                     v['cite'] = idx[fnid]
 
-        return render_template('notes.html', html=html, tags=json.dumps(tags))
+        return render_template('notes.html', html=html, tags=json.dumps(tags), fnid_len=config.FNID_LEN)
     else:
         path = os.path.join(config.NOTES_DIR, path)
         files = [(f.replace(config.NOTES_DIR, ''), os.path.relpath(f, path)) for f in sorted(files)]
@@ -107,6 +107,22 @@ def outline(path):
         outline.append('\n')
 
     return Response('\n'.join(outline), mimetype='text/plain')
+
+
+@app.route('/<path:path>/highlights')
+def highlights(path):
+    """Render highlights"""
+    files = get_files(path)
+    fns, idx = fn.make_footnotes(files)
+
+    highlights = []
+    for fnid in idx.keys():
+        if fnid in db:
+            for data, m in db[fnid].items():
+                highlight = '{}[^{}]\n{{{}}}'.format(data, fnid[:config.FNID_LEN], ', '.join(m['tags']))
+                highlights.append(highlight)
+
+    return Response('\n\n'.join(highlights), mimetype='text/plain')
 
 
 @app.route('/tag', methods=['POST'])

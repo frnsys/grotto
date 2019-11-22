@@ -3,7 +3,10 @@ class UIManager {
     this.state = state;
 
     // Manage article state (e.g. collapsed or not)
+    this.fnids = [];
     [...document.querySelectorAll('article')].forEach((article) => {
+      this.fnids.push(article.id);
+
       let bar = document.createElement('div');
       bar.classList.add('article-bar');
 
@@ -25,12 +28,52 @@ class UIManager {
         manager.toggle(id);
       });
 
+      // Copy footnote markdown on click
+      let label = article.querySelector('.fn-ref');
+      label.addEventListener('click', () => {
+        let div = document.createElement('div');
+        div.innerText = `[^${label.id.slice(0, fnidLen)}]`;
+        document.body.appendChild(div);
+        window.getSelection().selectAllChildren(div);
+        document.execCommand('copy');
+        window.getSelection().empty();
+        document.body.removeChild(div);
+
+        label.style.background = '#15B064';
+        setTimeout(() => {
+          label.style.background = '';
+        }, 200);
+      });
+
       let state = localStorage.getItem(article.id);
       this.set(article, state);
     });
 
     this.listTags();
     this.flagHighlighted();
+
+    window.addEventListener('scroll', () => {
+      this.updateCurrent();
+    });
+    this.updateCurrent();
+    this.updateProgress();
+  }
+
+  updateCurrent() {
+    let progress = document.getElementById('progress-hint--current');
+    let article = this.activeArticle();
+    if (article) {
+      let idx = this.fnids.indexOf(article.id);
+      progress.innerText = `${idx}/${this.fnids.length}`;
+    } else {
+      progress.innerText = `?/${this.fnids.length}`;
+    }
+  }
+
+  updateProgress() {
+    let progress = document.getElementById('progress-hint--finished');
+    let finished = document.querySelectorAll('.stashed-title').length;
+    progress.innerText = `${((finished/this.fnids.length)*100).toFixed(1)}%`;
   }
 
   toggle(id) {
@@ -57,6 +100,8 @@ class UIManager {
       el.style.display = display;
     });
     localStorage.setItem(article.id, state);
+
+    this.updateProgress();
   }
 
   listTags() {
@@ -98,7 +143,7 @@ class UIManager {
     });
   }
 
-  // Get the id of the active article
+  // Get the active article
   activeArticle() {
     let top = Math.round(window.pageYOffset);
 

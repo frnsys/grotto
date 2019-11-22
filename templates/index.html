@@ -1,6 +1,11 @@
 {% extends 'layout.html' %}
 
 {% block content %}
+<div class="links">
+    <a href="{{request.path}}/fns">Footnotes</a>
+    <a href="{{request.path}}/tags">Outline</a>
+    <a href="{{request.path}}/highlights">Highlights</a>
+</div>
 <ul>
     {% for path, name in files %}
         <li><a href="{{ path }}">{{ name }}</a></li>

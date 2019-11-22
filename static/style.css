@@ -1,3 +1,7 @@
+* {
+  box-sizing: border-box;
+}
+
 html {
   padding: 0 1em;
   font-family: sans-serif;
@@ -17,6 +21,10 @@ h1 {
   padding: 0.25em 0.5em;
   line-height: 1;
   text-decoration: none;
+  cursor: pointer;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 .fn-ref:hover {
   background: #FDC007;
@@ -67,7 +75,7 @@ article {
   left: 2em;
   width: calc(100% - 4em);
   display: none;
-  z-index: 10;
+  z-index: 11;
 }
 #tag-input {
   width: 100%;
@@ -77,6 +85,20 @@ article {
   background: rgba(12,12,20,0.95);
   color: #fff;
   font-size: 1em;
+}
+#tag-citation {
+  font-family: monospace;
+  position: fixed;
+  bottom: 1em;
+  background: #eee;
+  padding: 1em;
+  left: 2em;
+  right: 2em;
+  z-index: 1;
+}
+#tag-citation:hover {
+  background: #FDC007;
+  cursor: pointer;
 }
 
 .article-bar {
@@ -151,6 +173,10 @@ article {
   background: #FDC007;
   color: #000;
 }
+.tag-active {
+  background: #FDC007;
+  color: #000;
+}
 
 .tagged-data {
   margin-top: 1em;
@@ -165,4 +191,18 @@ article {
 }
 .tagged-data--tags a:hover {
   text-decoration: underline;
+}
+
+#progress-hint {
+  position: fixed;
+  left: 1em;
+  bottom: 1em;
+  color: #aaa;
+  font-size: 0.75em;
+}
+
+@media only screen and (max-width: 1080px) {
+  #all-tags {
+    display: none;
+  }
 }

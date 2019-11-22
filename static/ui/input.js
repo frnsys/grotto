@@ -1,9 +1,22 @@
 class TagInput {
   constructor(state, form) {
     this.form = form;
+    this.state = state;
+
     this.input = form.querySelector('#tag-input');
     this.tagList = form.querySelector('#tag-list');
-    this.state = state;
+
+    // Copy on click
+    this.citation = form.querySelector('#tag-citation');
+    this.citation.addEventListener('click', () => {
+      window.getSelection().selectAllChildren(this.citation);
+      document.execCommand('copy');
+      window.getSelection().empty();
+      this.citation.style.background = '#15B064';
+      setTimeout(() => {
+        this.citation.style.background = '';
+      }, 200);
+    });
 
     this.input.addEventListener('keyup', (ev) => {
       if (ev.key == 'Enter') {
@@ -20,6 +33,10 @@ class TagInput {
     if (value) {
       this.input.value = value;
     }
+
+    // For directly copying citation
+    let selected = this.state.selected;
+    this.citation.innerText = `${selected.data}[^${selected.fnid.slice(0, fnidLen)}]`
 
     this.updateTagSuggestions();
   }
@@ -80,6 +97,7 @@ class TagInput {
         let tagEl = createElement('div', {});
         tagEl.classList.add('tag');
         tagEl.innerText = `${t} (${count})`;
+        if (vals.includes(t)) tagEl.classList.add('tag-active');
         this.tagList.appendChild(tagEl);
       });
     });

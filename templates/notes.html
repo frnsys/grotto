@@ -4,17 +4,24 @@
 <div class="links">
     <a href="{{request.path}}/fns">Footnotes</a>
     <a href="{{request.path}}/tags">Outline</a>
+    <a href="{{request.path}}/highlights">Highlights</a>
 </div>
 <div id="all-tags"></div>
 <div id="tag-form">
     <input type="text" id="tag-input" />
     <div id="tag-list"></div>
+    <div id="tag-citation"></div>
+</div>
+<div id="progress-hint">
+    <div id="progress-hint--current"></div>
+    <div id="progress-hint--finished"></div>
 </div>
 
 {{html|safe}}
 
 <script>
 const init = {{tags|safe}};
+const fnidLen = {{ fnid_len }};
 </script>
 <script src="{{ url_for('static', filename='md5.js') }}"></script>
 <script src="{{ url_for('static', filename='db.js') }}"></script>

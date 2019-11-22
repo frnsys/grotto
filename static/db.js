@@ -12,6 +12,7 @@ class Database {
         this.db[hash] = {
           data: data,
           fnid: fnid,
+          cite: m.cite,
           type: m.type,
           tags: m.tags
         };
@@ -25,6 +26,7 @@ class Database {
 
   save(selected, tags, onSave) {
     let data = {
+      cite: selected.cite,
       data: selected.data.trim(),
       fnid: selected.fnid,
       type: selected.type,
