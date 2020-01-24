@@ -55,3 +55,10 @@ Visit `http://localhost:5000/` to browse and search through tags. This will also
 - To generate markdown-formatted footnotes, click on the `Footnotes` link.
 - To generate an "outline" (tagged texts/images grouped by tag), click on the `Outline` link.
 - Highlights are assumed to be unique on an article id and highlighted text or image source basis. So if you tag the text "the cat in the hat" in article `abc123` and "the cat in the hat" occurs elsewhere in that article, both instances are treated as identical.
+
+### Ingesting highlights from elsewhere
+
+For ingesting my highlights from elsewhere, e.g. [Kobo](https://github.com/frnsys/kobo_export) and [web highlights](https://github.com/frnsys/hili), I have the `guts.py` script. Running it does the following:
+
+- web highlights are added to the `grotto` database
+- Kobo highlights are added to `~/notes/research/books`
