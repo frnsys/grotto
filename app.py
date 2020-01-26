@@ -6,6 +6,7 @@ from lib import db, fn
 from nom import md2html
 from collections import defaultdict
 from flask import Flask, Response, render_template, request, jsonify, send_from_directory
+from guts import sync_notes
 
 app = Flask(__name__)
 db = db.CSVDB(config.DB_PATH)
@@ -16,6 +17,29 @@ def get_files(path):
         return [path]
     else:
         return glob(os.path.join(config.NOTES_DIR, path, '*.md'))
+
+
+@app.route('/sync')
+def sync():
+    try:
+        changes = sync_notes()
+    except Exception as e:
+        return f'Exception: {e}'
+
+    result = ['Sync successful.']
+    no_changes = all(not v for v in changes.values())
+    if no_changes:
+        result.append('No changes.')
+    else:
+        if changes['citations']:
+            result.append('<br>New citations:')
+            for c in changes['citations']:
+                result.append(c)
+        if changes['books']:
+            result.append('<br>New books:')
+            for c in changes['books']:
+                result.append(c)
+    return '<br>'.join(result)
 
 
 @app.route('/<path:path>')
@@ -183,4 +207,4 @@ def browse():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=8800)

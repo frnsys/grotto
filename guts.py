@@ -10,6 +10,7 @@ from scp import SCPClient
 from slugify import slugify
 from collections import defaultdict
 
+
 def sync_remote_hili(remote, local):
     """sync remote hili data to local"""
     conn, path = remote.split(':')
@@ -48,8 +49,13 @@ def sync_remote_hili(remote, local):
         os.path.join(local, 'assets')
     ])
 
-if __name__ == '__main__':
-    db = db.CSVDB(config.DB_PATH)
+
+def sync_notes():
+    db_ = db.CSVDB(config.DB_PATH)
+    changes = {
+        'citations': set(),
+        'books': set()
+    }
 
     print('Synchronizing remote hili to local...')
     sync_remote_hili(config.HILI_REMOTE, config.HILI_LOCAL)
@@ -74,13 +80,14 @@ if __name__ == '__main__':
             # Only add new entries
             # Since old entries may have been changed
             # in the database
-            if data not in db[fnid]:
-                db[fnid][data] = {
+            if data not in db_[fnid]:
+                db_[fnid][data] = {
                     'type': type,
                     'tags': tags
                 }
-                db.sources[fnid] = citation
-        db.save()
+                db_.sources[fnid] = citation
+                changes['citations'].add(citation)
+        db_.save()
 
     # Kobo
     print('Adding kobo annotations to notes...')
@@ -113,5 +120,14 @@ if __name__ == '__main__':
 
         for slug, highlights in books.items():
             text = '# {}\n\n{}'.format(cites[slug], '\n\n'.join(highlights))
-            with open(os.path.join(kobo_out, f'{slug}.md'), 'w') as f:
+            path = os.path.join(kobo_out, f'{slug}.md')
+            if not os.path.exists(path):
+                changes['books'].append(path)
+            with open(path, 'w') as f:
                 f.write(text)
+
+    return changes
+
+
+if __name__ == '__main__':
+    sync_notes()
